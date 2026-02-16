@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI</title>
+</head>
+<body>
+
+  <button id="btn">Send</button>
+  <input type="text" id="VideoInput" placeholder="Input" size="50">
+    
+
+
+
+  <div id="out" class="output"></div>
+  <button id="copyBtn">Copy</button>
+  <form id="myForm">
+  <p>Choose:</p>
+
+  <label>
+    <input type="radio" name="choice" value="cpu">
+    CPU
+  </label>
+
+  <label>
+    <input type="radio" name="choice" value="cuda">
+    GPU
+  </label>
+</form>
+
+
+
+
+
+  <style>
+    .output {
+      margin-top: 20px;
+      padding: 15px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background: #f8f8f8;
+  
+      white-space: pre-wrap;   
+      word-wrap: break-word;   
+      
+      max-height: 400px;
+      overflow-y: auto;        
+  
+      font-family: monospace;
+      font-size:15px;
+      user-select: text;       
+    }
+  </style>
+   <script src="script.js"></script>
+</body>
+</html>
+
