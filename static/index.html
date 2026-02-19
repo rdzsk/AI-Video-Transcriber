@@ -3,56 +3,372 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI</title>
-</head>
-<body>
-
-  <button id="btn">Send</button>
-  <input type="text" id="VideoInput" placeholder="Input" size="50">
-    
-
-
-
-  <div id="out" class="output"></div>
-  <button id="copyBtn">Copy</button>
-  <form id="myForm">
-  <p>Choose:</p>
-
-  <label>
-    <input type="radio" name="choice" value="cpu">
-    CPU
-  </label>
-
-  <label>
-    <input type="radio" name="choice" value="cuda">
-    GPU
-  </label>
-</form>
-
-
-
-
-
+  <title>Vide Transcribe</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
   <style>
-    .output {
-      margin-top: 20px;
-      padding: 15px;
-      border: 1px solid #ccc;
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0f;
+      --surface: #111118;
+      --border: #1e1e2e;
+      --accent: #7c3aed;
+      --accent-glow: rgba(124, 58, 237, 0.4);
+      --accent2: #06b6d4;
+      --text: #e2e8f0;
+      --muted: #64748b;
+      --success: #10b981;
+      --mono: 'Space Mono', monospace;
+      --display: 'Syne', sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--mono);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 20% 20%, rgba(124,58,237,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 80% 80%, rgba(6,182,212,0.06) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 680px;
+      position: relative;
+      z-index: 1;
+      animation: fadeUp 0.6s ease both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .logo {
+      width: 42px; height: 42px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: grid; place-items: center;
+      font-family: var(--display);
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: #fff;
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+
+    .title {
+      font-family: var(--display);
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      background: linear-gradient(90deg, var(--text), var(--muted));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .tag {
+      margin-left: auto;
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent2);
+      border: 1px solid var(--accent2);
+      padding: 3px 8px;
+      border-radius: 4px;
+      opacity: 0.7;
+    }
+
+    /* Card */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      box-shadow: 0 1px 0 rgba(255,255,255,0.03) inset,
+                  0 20px 60px rgba(0,0,0,0.5);
+    }
+
+    /* Input group */
+    .input-group {
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    .input-wrap {
+      flex: 1;
+      position: relative;
+    }
+
+    .input-wrap::before {
+      content: '›';
+      position: absolute;
+      left: 14px; top: 50%; transform: translateY(-50%);
+      color: var(--muted);
+      font-size: 1.2rem;
+      pointer-events: none;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      background: #0d0d14;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      padding: 0.75rem 1rem 0.75rem 2.2rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    input[type="text"]::placeholder { color: var(--muted); }
+
+    /* Send button */
+    #btn {
+      background: linear-gradient(135deg, var(--accent), #5b21b6);
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      font-family: var(--display);
+      font-weight: 700;
+      font-size: 0.85rem;
+      padding: 0.75rem 1.4rem;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+      box-shadow: 0 4px 20px var(--accent-glow);
+      white-space: nowrap;
+    }
+
+    #btn:hover { transform: translateY(-1px); box-shadow: 0 8px 28px var(--accent-glow); }
+    #btn:active { transform: translateY(0); opacity: 0.9; }
+
+    /* Device selector */
+    .device-row {
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    .device-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .radio-card {
+      flex: 1;
+      position: relative;
+    }
+
+    .radio-card input[type="radio"] {
+      position: absolute;
+      opacity: 0; width: 0; height: 0;
+    }
+
+    .radio-card label {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.65rem 1rem;
+      background: #0d0d14;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      color: var(--muted);
+      transition: all 0.2s;
+      user-select: none;
+    }
+
+    .radio-card label .icon {
+      font-size: 1rem;
+      line-height: 1;
+    }
+
+    .radio-card input:checked + label {
+      border-color: var(--accent);
+      color: var(--text);
+      background: rgba(124,58,237,0.1);
+      box-shadow: 0 0 0 1px var(--accent);
+    }
+
+    .radio-card label:hover { border-color: var(--muted); color: var(--text); }
+
+    /* Output */
+    .output-wrap {
+      position: relative;
+    }
+
+    #out {
+      background: #070710;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.2rem;
+      min-height: 120px;
+      max-height: 340px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      line-height: 1.7;
+      color: #a3e635;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+
+    #out:empty::before {
+      content: '// output will appear here...';
+      color: var(--muted);
+    }
+
+    .output-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+
+    .output-title {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+    }
+
+    .dots span {
+      display: inline-block;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      margin-right: 4px;
+    }
+    .dots span:nth-child(1) { background: #ff5f57; }
+    .dots span:nth-child(2) { background: #febc2e; }
+    .dots span:nth-child(3) { background: #28c840; }
+
+    /* Copy button */
+    #copyBtn {
+      background: transparent;
+      border: 1px solid var(--border);
       border-radius: 8px;
-      background: #f8f8f8;
-  
-      white-space: pre-wrap;   
-      word-wrap: break-word;   
-      
-      max-height: 400px;
-      overflow-y: auto;        
-  
-      font-family: monospace;
-      font-size:15px;
-      user-select: text;       
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      padding: 0.4rem 0.9rem;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      transition: all 0.2s;
+    }
+
+    #copyBtn:hover {
+      border-color: var(--accent2);
+      color: var(--accent2);
+    }
+
+    #copyBtn.copied {
+      border-color: var(--success);
+      color: var(--success);
     }
   </style>
-   <script src="script.js"></script>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">AI</div>
+      <span class="title">Video-AI</span>
+      <span class="tag">v1.0</span>
+    </div>
+
+    <div class="card">
+      <!-- Input -->
+      <div class="input-group">
+        <div class="input-wrap">
+          <input type="text" id="VideoInput" placeholder="Enter URL..." />
+        </div>
+        <button id="btn">Send</button>
+      </div>
+
+      <!-- Device -->
+      <div>
+        <div class="device-label">Compute device</div>
+        <div class="device-row">
+          <div class="radio-card">
+            <input type="radio" name="choice" id="cpu" value="cpu">
+            <label for="cpu">
+              <span class="icon">🖥</span> CPU
+            </label>
+          </div>
+          <div class="radio-card">
+            <input type="radio" name="choice" id="cuda" value="cuda">
+            <label for="cuda">
+              <span class="icon">⚡</span> GPU (CUDA)
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Output -->
+      <div>
+        <div class="output-bar">
+          <div class="dots"><span></span><span></span><span></span></div>
+          <span class="output-title">Output</span>
+          <button id="copyBtn">Copy</button>
+        </div>
+        <div id="out" class="output"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Copy button logic
+    document.getElementById('copyBtn').addEventListener('click', () => {
+      const text = document.getElementById('out').innerText;
+      if (!text) return;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = document.getElementById('copyBtn');
+        btn.textContent = '✓ Copied';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+      });
+    });
+
+    // Send on Enter
+    document.getElementById('VideoInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('btn').click();
+    });
+  </script>
+  <script src="/static/script.js"></script>
 </body>
 </html>
-
