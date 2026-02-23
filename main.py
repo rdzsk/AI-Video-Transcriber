@@ -30,6 +30,11 @@ app.add_middleware(
 HOME_PATH = Path.cwd()
 JOB_FILE = "data.json"
 
+
+if not Path(JOB_FILE).exists():
+    with open(JOB_FILE, "w", encoding="utf-8") as f:
+        json.dump({}, f, ensure_ascii=False, indent=4)
+    
 with open(JOB_FILE, "r", encoding="utf-8") as f:
     jobs = json.load(f)
 
@@ -145,5 +150,5 @@ def clear(video_id):
     (HOME_PATH / f"{video_id}.vtt").unlink()
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", reload=True)
+    uvicorn.run("main:app",host="0.0.0.0" ,port=8000,reload=True)
 

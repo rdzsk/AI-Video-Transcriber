@@ -13,7 +13,7 @@ document.getElementById("btn").addEventListener("click", async () => {
   }
 
   try {
-    const res = await fetch("http://127.0.0.1:8000/summarize", {
+    const res = await fetch("http://0.0.0.0:8000/summarize", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ video_url: videoUrl, typ: selected.value })
@@ -24,7 +24,7 @@ document.getElementById("btn").addEventListener("click", async () => {
 
     out.textContent = "Job created. Waiting for updates...";
 
-    const es = new EventSource(`http://127.0.0.1:8000/events/jobs/${job_id}`);
+    const es = new EventSource(`http://0.0.0.0:8000/events/jobs/${job_id}`);
     window._jobEventSource = es;
 
     es.addEventListener("message", (event) => {

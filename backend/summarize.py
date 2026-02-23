@@ -14,7 +14,7 @@ class Summarize:
         with open(f"{self.video_id}.vtt",'rb') as f:
             file = f.read()
             response = self.client.models.generate_content(
-                model="gemini-2.5-flash",
+                model="gemini-3-flash-preview",
                 contents=f"Summarize this text with timecodes(ON SAME LANGUAGE) {file}",
             )
             return response.text
